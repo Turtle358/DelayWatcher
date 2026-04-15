@@ -42,6 +42,7 @@ public class TOCBrandHelper {
         officialColours.put("Stansted Express", "#E4002B");
         officialColours.put("London Underground", "#0019A8");
         officialColours.put("Hull Trains", "#DE005C");
+        officialColours.put("London Northwestern Railway", "#00A91C");
     }
 
     public static void init(Context context) {
@@ -94,12 +95,13 @@ public class TOCBrandHelper {
             case "XR": return "Elizabeth line";
             case "HX": return "Heathrow Express";
             case "CS": return "Caledonian Sleeper";
-            case "LN": return "Grand Central - North West";
+            case "LF": return "Grand Central - North West";
             case "GC": return "Grand Central";
             case "LD": return "Lumo";
             case "SX": return "Stansted Express";
             case "ZN": return "London Underground";
             case "HT": return "Hull Trains";
+            case "LN": return "London Northwestern Railway";
             default:
                 return code;
         }

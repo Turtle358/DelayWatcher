@@ -15,19 +15,19 @@ public class SettingsActivity extends AppCompatActivity {
     private final String[] tocNames = {
             "Avanti West Coast", "c2c", "Caledonian Sleeper", "Chiltern Railways",
             "CrossCountry", "East Midlands Railway", "Elizabeth Line", "Gatwick Express",
-            "Grand Central", "Great Northern", "Greater Anglia", "Heathrow Express",
-            "Hull Trains", "LNER", "London Overground", "London Underground", "Lumo",
-            "Merseyrail", "Northern", "ScotRail", "South Western Railway",
-            "Southeastern", "Southern", "Stansted Express", "Thameslink",
-            "TransPennine Express", "Transport for Wales"
+            "Grand Central", "Grand Central - North West", "Great Northern", "Greater Anglia", "Heathrow Express",
+            "Hull Trains", "LNER", "London Northwestern Railway", "London Overground",
+            "London Underground", "Lumo", "Merseyrail", "Northern", "ScotRail",
+            "South Western Railway", "Southeastern", "Southern", "Stansted Express",
+            "Thameslink", "TransPennine Express", "Transport for Wales"
     };
 
     private final String[] tocCodes = {
             "VT", "CC", "CS", "CH",
             "XC", "EM", "XR", "GX",
-            "LN", "GN", "LE", "HX",
-            "HT", "GR", "LO", "ZN",
-            "LD", "ME", "NT", "SR",
+            "GC", "LF", "GN", "LE", "HX",
+            "HT", "GR", "LN", "LO",
+            "ZN", "LD", "ME", "NT", "SR",
             "SW", "SE", "SN", "SX",
             "TL", "TP", "AW"
     };
