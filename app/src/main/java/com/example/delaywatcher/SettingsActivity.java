@@ -16,17 +16,19 @@ public class SettingsActivity extends AppCompatActivity {
             "Avanti West Coast", "c2c", "Caledonian Sleeper", "Chiltern Railways",
             "CrossCountry", "East Midlands Railway", "Elizabeth Line", "Gatwick Express",
             "Grand Central", "Great Northern", "Greater Anglia", "Heathrow Express",
-            "LNER", "London Overground", "Merseyrail", "Northern",
-            "ScotRail", "South Western Railway", "Southeastern", "Southern",
-            "Thameslink", "TransPennine Express", "Transport for Wales"
+            "Hull Trains", "LNER", "London Overground", "London Underground", "Lumo",
+            "Merseyrail", "Northern", "ScotRail", "South Western Railway",
+            "Southeastern", "Southern", "Stansted Express", "Thameslink",
+            "TransPennine Express", "Transport for Wales"
     };
 
     private final String[] tocCodes = {
             "VT", "CC", "CS", "CH",
             "XC", "EM", "XR", "GX",
             "LN", "GN", "LE", "HX",
-            "GR", "LO", "ME", "NT",
-            "SR", "SW", "SE", "SN",
+            "HT", "GR", "LO", "ZN",
+            "LD", "ME", "NT", "SR",
+            "SW", "SE", "SN", "SX",
             "TL", "TP", "AW"
     };
     private boolean[] checkedItems;
