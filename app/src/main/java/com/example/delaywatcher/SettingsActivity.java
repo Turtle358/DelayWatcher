@@ -12,13 +12,23 @@ import androidx.appcompat.app.AppCompatActivity;
 import java.util.ArrayList;
 
 public class SettingsActivity extends AppCompatActivity {
-    private final String[] tocNames = {"Thameslink", "Southeastern", "Southern", "Gatwick Express", "London Overground", "Great Northern", "South Western Railway", "Avanti West Coast", "LNER", "CrossCountry",
+    private final String[] tocNames = {
+            "Avanti West Coast", "c2c", "Caledonian Sleeper", "Chiltern Railways",
+            "CrossCountry", "East Midlands Railway", "Elizabeth Line", "Gatwick Express",
+            "Grand Central", "Great Northern", "Greater Anglia", "Heathrow Express",
+            "LNER", "London Overground", "Merseyrail", "Northern",
+            "ScotRail", "South Western Railway", "Southeastern", "Southern",
+            "Thameslink", "TransPennine Express", "Transport for Wales"
+    };
 
-            "East Midlands Railway", "Chiltern Railways", "Greater Anglia", "Northern", "TransPennine Express", "ScotRail", "Transport for Wales", "Merseyrail", "c2c", "London Overground",
-
-            "Elizabeth Line", "Heathrow Express", "Caledonian Sleeper", "Grand Central"};
-
-    private final String[] tocCodes = {"TL", "SE", "SN", "GX", "LO", "GN", "SW", "VT", "GR", "XC", "EM", "CH", "LE", "NT", "TP", "SR", "AW", "ME", "CC", "LO", "XR", "HX", "CS", "LN"};
+    private final String[] tocCodes = {
+            "VT", "CC", "CS", "CH",
+            "XC", "EM", "XR", "GX",
+            "LN", "GN", "LE", "HX",
+            "GR", "LO", "ME", "NT",
+            "SR", "SW", "SE", "SN",
+            "TL", "TP", "AW"
+    };
     private boolean[] checkedItems;
     private EditText etCustomerKey;
     private Button btnSaveSettings;

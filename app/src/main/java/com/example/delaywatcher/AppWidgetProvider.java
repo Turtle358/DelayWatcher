@@ -57,8 +57,20 @@ public class AppWidgetProvider extends android.appwidget.AppWidgetProvider {
 
         renderWidgetVisuals(views, data);
         Intent openApp = new Intent(context, MainActivity.class);
-        PendingIntent piApp = PendingIntent.getActivity(context, 0, openApp, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+        PendingIntent piApp = PendingIntent.getActivity(context, 0, openApp,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
         views.setOnClickPendingIntent(R.id.titleContainer, piApp);
+        Intent refreshIntent = new Intent(context, MainActivity.class);
+        refreshIntent.putExtra("FORCE_REFRESH", true);
+        refreshIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+
+        PendingIntent piRefresh = PendingIntent.getActivity(
+                context,
+                1,
+                refreshIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+
+        views.setOnClickPendingIntent(R.id.widgetRefresh, piRefresh);
 
         manager.updateAppWidget(appWidgetId, views);
     }
