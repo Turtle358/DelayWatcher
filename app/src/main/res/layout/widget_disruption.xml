@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widgetRoot"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_widget_rounded"
+    android:paddingStart="20dp"
+    android:paddingTop="20dp"
+    android:paddingEnd="20dp"
+    android:paddingBottom="14dp">
+
+    <LinearLayout
+        android:id="@+id/titleContainer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true">
+
+        <TextView
+            android:id="@+id/titleLine1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Status"
+            android:textColor="#111111"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/titleLine2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Disruption"
+            android:textColor="#111111"
+            android:textSize="20sp" />
+    </LinearLayout>
+
+    <ImageView
+        android:id="@+id/widgetRefresh"
+        android:layout_width="28dp"
+        android:layout_height="28dp"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentTop="true"
+        android:contentDescription="Refresh"
+        android:src="@android:drawable/ic_popup_sync"
+        android:tint="#111111" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:id="@+id/widgetLogo"
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:layout_marginEnd="6dp"
+            android:src="@drawable/national_rail_logo_red"
+            android:tint="#111111" />
+
+        <TextView
+            android:id="@+id/widgetTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="--:--"
+            android:textColor="#111111"
+            android:textSize="14sp"
+            android:includeFontPadding="false" />
+
+        <FrameLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1" />
+
+        <LinearLayout
+            android:id="@+id/layoutPills"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginEnd="8dp">
+
+            <RelativeLayout
+                android:id="@+id/badge1_container"
+                android:layout_width="32dp"
+                android:layout_height="18dp"
+                android:layout_marginEnd="6dp"
+                android:visibility="gone">
+
+                <ImageView
+                    android:id="@+id/badge1_bg"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:src="@drawable/bg_pill_base" />
+
+                <TextView
+                    android:id="@+id/badge1_text"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center"
+                    android:textColor="#FFFFFF"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:includeFontPadding="false" />
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:id="@+id/badge2_container"
+                android:layout_width="32dp"
+                android:layout_height="18dp"
+                android:visibility="gone">
+
+                <ImageView
+                    android:id="@+id/badge2_bg"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:src="@drawable/bg_pill_base" />
+
+                <TextView
+                    android:id="@+id/badge2_text"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center"
+                    android:textColor="#FFFFFF"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:includeFontPadding="false" />
+            </RelativeLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/layoutBars"
+            android:layout_width="wrap_content"
+            android:layout_height="22dp"
+            android:layout_marginEnd="8dp"
+            android:orientation="horizontal"
+            android:visibility="gone">
+
+            <ImageView android:id="@+id/bar1" android:layout_width="10dp" android:layout_height="match_parent" android:layout_marginEnd="4dp" android:src="@drawable/bg_bar_base" />
+            <ImageView android:id="@+id/bar2" android:layout_width="10dp" android:layout_height="match_parent" android:layout_marginEnd="4dp" android:src="@drawable/bg_bar_base" />
+            <ImageView android:id="@+id/bar3" android:layout_width="10dp" android:layout_height="match_parent" android:layout_marginEnd="4dp" android:src="@drawable/bg_bar_base" />
+            <ImageView android:id="@+id/bar4" android:layout_width="10dp" android:layout_height="match_parent" android:layout_marginEnd="4dp" android:src="@drawable/bg_bar_base" />
+            <ImageView android:id="@+id/bar5" android:layout_width="10dp" android:layout_height="match_parent" android:src="@drawable/bg_bar_base" />
+        </LinearLayout>
+
+        <ImageView
+            android:id="@+id/iconAlert"
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:src="@drawable/ic_alert_diamond" />
+
+    </LinearLayout>
+</RelativeLayout>
