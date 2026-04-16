@@ -17,7 +17,7 @@ Delay Watcher is a sleek, modern Android application and Home Screen Widget desi
 
 ## Obtaining a National Rail API Key
 To use this app, you need a free API token from National Rail:
-1. Go to the [National Rail Open Data Portal](https://opendata.nationalrail.co.uk/).
+1. Go to the [Rail Data Marketplace](https://raildata.org.uk).
 2. Click **Register** and create a free account.
 3. Once logged in, navigate to your **My Account** or **Subscriptions** dashboard.
 4. Look for the **Disruptions Experience API** (or equivalent real-time incidents API) and click **Subscribe**.
