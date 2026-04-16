@@ -15,9 +15,14 @@ import com.google.gson.reflect.TypeToken;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
 
 public class AppWidgetProvider extends android.appwidget.AppWidgetProvider {
 
@@ -60,11 +65,11 @@ public class AppWidgetProvider extends android.appwidget.AppWidgetProvider {
         PendingIntent piApp = PendingIntent.getActivity(context, 0, openApp,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
         views.setOnClickPendingIntent(R.id.titleContainer, piApp);
-        Intent refreshIntent = new Intent(context, MainActivity.class);
-        refreshIntent.putExtra("FORCE_REFRESH", true);
-        refreshIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
 
-        PendingIntent piRefresh = PendingIntent.getActivity(
+        Intent refreshIntent = new Intent(context, AppWidgetProvider.class);
+        refreshIntent.setAction("com.example.delaywatcher.ACTION_REFRESH_WIDGET");
+
+        PendingIntent piRefresh = PendingIntent.getBroadcast(
                 context,
                 1,
                 refreshIntent,
@@ -83,6 +88,9 @@ public class AppWidgetProvider extends android.appwidget.AppWidgetProvider {
             views.setTextColor(R.id.titleLine1, Color.WHITE);
             views.setTextColor(R.id.titleLine2, Color.WHITE);
             views.setTextColor(R.id.widgetTime, Color.WHITE);
+            views.setInt(R.id.widgetRefresh, "setColorFilter", Color.WHITE);
+            views.setInt(R.id.widgetLogo, "setColorFilter", Color.WHITE);
+
             views.setViewVisibility(R.id.layoutPills, View.GONE);
             views.setViewVisibility(R.id.layoutBars, View.GONE);
             views.setViewVisibility(R.id.iconAlert, View.GONE);
@@ -90,10 +98,14 @@ public class AppWidgetProvider extends android.appwidget.AppWidgetProvider {
             views.setInt(R.id.widgetRoot, "setBackgroundResource", R.drawable.bg_widget_rounded);
             views.setTextViewText(R.id.titleLine1, "Status");
             views.setTextViewText(R.id.titleLine2, "Disruption");
+
             int dark = Color.parseColor("#111111");
             views.setTextColor(R.id.titleLine1, dark);
             views.setTextColor(R.id.titleLine2, dark);
             views.setTextColor(R.id.widgetTime, dark);
+            views.setInt(R.id.widgetRefresh, "setColorFilter", dark);
+            views.setInt(R.id.widgetLogo, "setColorFilter", dark);
+
             views.setViewVisibility(R.id.iconAlert, View.VISIBLE);
 
             if (disruptedTocs.size() <= 2) {
@@ -128,5 +140,108 @@ public class AppWidgetProvider extends android.appwidget.AppWidgetProvider {
         views.setInt(bgId, "setColorFilter", color);
         views.setTextViewText(textId, toc.tocCode);
         views.setViewVisibility(containerId, View.VISIBLE);
+    }
+
+    @Override
+    public void onReceive(Context context, Intent intent) {
+        super.onReceive(context, intent);
+
+        if ("com.example.delaywatcher.ACTION_REFRESH_WIDGET".equals(intent.getAction())) {
+            final PendingResult pendingResult = goAsync();
+            new Thread(() -> {
+                performBackgroundSync(context);
+                pendingResult.finish();
+            }).start();
+        }
+    }
+
+    private void performBackgroundSync(Context context) {
+        SharedPreferences prefs = context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
+        String key = prefs.getString("CUSTOMER_KEY", "");
+        if (key.isEmpty()) return;
+        String selectedTocs = prefs.getString("WIDGET_TRACKED_TOCS", "");
+        Set<String> trackedSet = new HashSet<>();
+        if (!selectedTocs.trim().isEmpty()) {
+            for (String s : selectedTocs.split(",")) {
+                if (!s.trim().isEmpty()) trackedSet.add(s.trim());
+            }
+        }
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        String today = sdf.format(new Date());
+        IncidentSearchRequest request = new IncidentSearchRequest(today, today, new ArrayList<>());
+
+        NationalRailAPI api = APIClient.getClient().create(NationalRailAPI.class);
+
+        try {
+            retrofit2.Response<List<IncidentResponse>> response = api.searchIncidents(key, request).execute();
+
+            if (response.isSuccessful() && response.body() != null) {
+                Map<String, DisruptionResponce.ServiceIndicator> trackedMap = new LinkedHashMap<>();
+                Map<String, DisruptionResponce.ServiceIndicator> othersMap = new LinkedHashMap<>();
+                for (IncidentResponse incident : response.body()) {
+                    if (incident.affectedOperators == null || "Cleared".equalsIgnoreCase(incident.status)) continue;
+
+                    for (IncidentResponse.AffectedOperator op : incident.affectedOperators) {
+                        String currentSummary = incident.summary != null ? incident.summary.toLowerCase() : "";
+                        String currentDesc = incident.description != null ? incident.description.toLowerCase() : "";
+                        String simplifiedStatus = "Minor Disruption";
+
+                        boolean isEngineering = (currentSummary.contains("engineering") || currentDesc.contains("engineering"))
+                                && !currentSummary.contains("overrun") && !currentDesc.contains("overrun");
+
+                        if (isEngineering) {
+                            simplifiedStatus = "Planned Works";
+                        } else if (currentSummary.contains("major") || currentSummary.contains("suspended") || currentSummary.contains("closed") || currentSummary.contains("blocked")) {
+                            simplifiedStatus = "Major Disruption";
+                        } else if (currentSummary.contains("bus") || currentSummary.contains("amended")) {
+                            simplifiedStatus = "Planned Works";
+                        }
+
+                        Map<String, DisruptionResponce.ServiceIndicator> targetMap =
+                                trackedSet.contains(op.tocCode) ? trackedMap : othersMap;
+
+                        if (!targetMap.containsKey(op.tocCode)) {
+                            DisruptionResponce.ServiceIndicator si = new DisruptionResponce.ServiceIndicator();
+                            si.tocCode = op.tocCode;
+                            si.tocName = TOCBrandHelper.getNameForCode(op.tocCode);
+                            si.status = simplifiedStatus;
+                            if (simplifiedStatus.equals("Planned Works")) {
+                                si.plannedDescription = incident.description;
+                            } else {
+                                si.description = incident.description;
+                            }
+                            targetMap.put(op.tocCode, si);
+                        } else {
+                            DisruptionResponce.ServiceIndicator existing = targetMap.get(op.tocCode);
+                            if (simplifiedStatus.equals("Major Disruption")) existing.status = "Major Disruption";
+                            else if (simplifiedStatus.equals("Minor Disruption") && existing.status.equals("Planned Works")) existing.status = "Minor Disruption";
+                        }
+                    }
+                }
+
+                List<DisruptionResponce.ServiceIndicator> trackedLive = new ArrayList<>();
+                for (DisruptionResponce.ServiceIndicator si : trackedMap.values()) {
+                    if (!si.status.equals("Planned Works")) trackedLive.add(si);
+                }
+                Collections.sort(trackedLive, (a, b) -> a.tocName.compareToIgnoreCase(b.tocName));
+
+                String widgetJson = new com.google.gson.Gson().toJson(trackedLive);
+                prefs.edit()
+                        .putString("CACHED_TOC_DATA", widgetJson)
+                        .putLong("LAST_SYNC_TIME", System.currentTimeMillis())
+                        .apply();
+
+                AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
+                ComponentName thisWidget = new ComponentName(context, AppWidgetProvider.class);
+                int[] appWidgetIds = appWidgetManager.getAppWidgetIds(thisWidget);
+
+                Intent updateIntent = new Intent(context, AppWidgetProvider.class);
+                updateIntent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
+                updateIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, appWidgetIds);
+                context.sendBroadcast(updateIntent);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

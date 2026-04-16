@@ -67,13 +67,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-
-        if (getIntent().getBooleanExtra("FORCE_REFRESH", false)) {
-            getIntent().removeExtra("FORCE_REFRESH");
-            fetchRailData(api, customerKey);
-            return;
-        }
-
         checkCacheAndLoad();
     }
 
@@ -96,7 +89,10 @@ public class MainActivity extends AppCompatActivity {
                     java.lang.reflect.Type type = new TypeToken<ArrayList<DisruptionResponce.ServiceIndicator>>(){}.getType();
                     List<DisruptionResponce.ServiceIndicator> cachedData = new Gson().fromJson(cachedJson, type);
                     adapter.updateData(cachedData);
-                    liveIndicator.setText("◉ Live (Cached)");
+                    SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
+                    String syncTime = timeFormat.format(new Date(lastSync));
+
+                    liveIndicator.setText("◉ Cached (" + syncTime + ")");
                     return;
                 } catch (Exception e) {
                     e.printStackTrace();
