@@ -63,8 +63,12 @@ public class DisruptionAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
                 intent.putExtra("TOC_CODE", item.tocCode);
                 intent.putExtra("TOC_STATUS", item.status);
                 intent.putExtra("TOC_DESCRIPTION", item.description);
+                intent.putExtra("TOC_PLANNED", item.plannedDescription);
                 context.startActivity(intent);
             });
+        } else if (holder instanceof SeparatorViewHolder) {
+            SeparatorViewHolder sHolder = (SeparatorViewHolder) holder;
+            sHolder.tvSeparatorTitle.setText(item.tocName);
         }
     }
 
@@ -78,7 +82,6 @@ public class DisruptionAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
         notifyDataSetChanged();
     }
 
-    // Two different ViewHolder classes
     public static class DisruptionViewHolder extends RecyclerView.ViewHolder {
         TextView tvTocName, tvTocCode, tvStatus;
         public DisruptionViewHolder(View v) {
@@ -90,6 +93,10 @@ public class DisruptionAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
     }
 
     public static class SeparatorViewHolder extends RecyclerView.ViewHolder {
-        public SeparatorViewHolder(View v) { super(v); }
+        TextView tvSeparatorTitle;
+        public SeparatorViewHolder(View v) {
+            super(v);
+            tvSeparatorTitle = v.findViewById(R.id.tvSeparatorTitle);
+        }
     }
 }

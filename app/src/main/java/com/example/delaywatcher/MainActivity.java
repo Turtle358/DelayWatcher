@@ -8,7 +8,6 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.widget.ImageButton;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -20,7 +19,6 @@ import com.google.gson.reflect.TypeToken;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
@@ -72,12 +70,11 @@ public class MainActivity extends AppCompatActivity {
 
         if (getIntent().getBooleanExtra("FORCE_REFRESH", false)) {
             getIntent().removeExtra("FORCE_REFRESH");
-
-            // Trigger the sync immediately
             fetchRailData(api, customerKey);
-        } else {
-            checkCacheAndLoad();
+            return;
         }
+
+        checkCacheAndLoad();
     }
 
     private void checkCacheAndLoad() {
@@ -91,6 +88,7 @@ public class MainActivity extends AppCompatActivity {
 
         long lastSync = prefs.getLong("LAST_SYNC_TIME", 0);
         long currentTime = System.currentTimeMillis();
+
         if (currentTime - lastSync < 900000 && lastSync != 0) {
             String cachedJson = prefs.getString("CACHED_TOC_DATA_ALL", null);
             if (cachedJson != null) {
@@ -105,7 +103,6 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         }
-
         fetchRailData(api, key);
     }
 
@@ -130,10 +127,8 @@ public class MainActivity extends AppCompatActivity {
 
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
         String today = sdf.format(new Date());
-        Calendar c = Calendar.getInstance();
-        c.add(Calendar.DATE, 1);
-        String tomorrow = sdf.format(c.getTime());
-        IncidentSearchRequest request = new IncidentSearchRequest(today, tomorrow, new ArrayList<>());
+
+        IncidentSearchRequest request = new IncidentSearchRequest(today, today, new ArrayList<>());
 
         api.searchIncidents(key, request).enqueue(new Callback<List<IncidentResponse>>() {
             @Override
@@ -148,12 +143,18 @@ public class MainActivity extends AppCompatActivity {
                         if (incident.affectedOperators == null || "Cleared".equalsIgnoreCase(incident.status)) continue;
 
                         for (IncidentResponse.AffectedOperator op : incident.affectedOperators) {
-                            String currentSummary = incident.summary.toLowerCase();
-                            String simplifiedStatus = "Minor Disruption";
+                            String currentSummary = incident.summary != null ? incident.summary.toLowerCase() : "";
+                            String currentDesc = incident.description != null ? incident.description.toLowerCase() : "";
 
-                            if (currentSummary.contains("major") || currentSummary.contains("suspended") || currentSummary.contains("closed")) {
+                            String simplifiedStatus = "Minor Disruption";
+                            boolean isEngineering = (currentSummary.contains("engineering") || currentDesc.contains("engineering"))
+                                    && !currentSummary.contains("overrun") && !currentDesc.contains("overrun");
+
+                            if (isEngineering) {
+                                simplifiedStatus = "Planned Works";
+                            } else if (currentSummary.contains("major") || currentSummary.contains("suspended") || currentSummary.contains("closed") || currentSummary.contains("blocked")) {
                                 simplifiedStatus = "Major Disruption";
-                            } else if (currentSummary.contains("bus") || currentSummary.contains("amended") || currentSummary.contains("engineering")) {
+                            } else if (currentSummary.contains("bus") || currentSummary.contains("amended")) {
                                 simplifiedStatus = "Planned Works";
                             }
 
@@ -165,35 +166,82 @@ public class MainActivity extends AppCompatActivity {
                                 si.tocCode = op.tocCode;
                                 si.tocName = TOCBrandHelper.getNameForCode(op.tocCode);
                                 si.status = simplifiedStatus;
-                                si.description = incident.description;
+
+                                if (simplifiedStatus.equals("Planned Works")) {
+                                    si.plannedDescription = incident.description;
+                                } else {
+                                    si.description = incident.description;
+                                }
                                 targetMap.put(op.tocCode, si);
-                            } else if (simplifiedStatus.equals("Major Disruption")) {
-                                targetMap.get(op.tocCode).status = "Major Disruption";
+                            } else {
+                                DisruptionResponce.ServiceIndicator existing = targetMap.get(op.tocCode);
+
+                                if (simplifiedStatus.equals("Major Disruption")) {
+                                    existing.status = "Major Disruption";
+                                } else if (simplifiedStatus.equals("Minor Disruption") && existing.status.equals("Planned Works")) {
+                                    existing.status = "Minor Disruption";
+                                }
+
+                                if (simplifiedStatus.equals("Planned Works")) {
+                                    if (existing.plannedDescription.isEmpty()) {
+                                        existing.plannedDescription = incident.description;
+                                    } else {
+                                        existing.plannedDescription += "<br><br><hr><br>" + incident.description;
+                                    }
+                                } else {
+                                    if (existing.description.isEmpty()) {
+                                        existing.description = incident.description;
+                                    } else {
+                                        existing.description += "<br><br><hr><br>" + incident.description;
+                                    }
+                                }
                             }
                         }
                     }
 
-                    // 1. Convert maps to lists
-                    List<DisruptionResponce.ServiceIndicator> trackedList = new ArrayList<>(trackedMap.values());
-                    List<DisruptionResponce.ServiceIndicator> othersList = new ArrayList<>(othersMap.values());
+                    List<DisruptionResponce.ServiceIndicator> trackedLive = new ArrayList<>();
+                    List<DisruptionResponce.ServiceIndicator> othersLive = new ArrayList<>();
+                    List<DisruptionResponce.ServiceIndicator> plannedWorks = new ArrayList<>();
 
-                    // 2. Sort both lists Alphabetically (A-Z)
-                    Collections.sort(trackedList, (a, b) -> a.tocName.compareToIgnoreCase(b.tocName));
-                    Collections.sort(othersList, (a, b) -> a.tocName.compareToIgnoreCase(b.tocName));
-                    List<DisruptionResponce.ServiceIndicator> finalData = new ArrayList<>(trackedList);
-                    if (!trackedList.isEmpty() && !othersList.isEmpty()) {
-                        DisruptionResponce.ServiceIndicator separator = new DisruptionResponce.ServiceIndicator();
-                        separator.tocCode = "SEPARATOR";
-                        finalData.add(separator);
+                    for (DisruptionResponce.ServiceIndicator si : trackedMap.values()) {
+                        if (si.status.equals("Planned Works")) plannedWorks.add(si);
+                        else trackedLive.add(si);
                     }
-                    finalData.addAll(othersList);
+
+                    for (DisruptionResponce.ServiceIndicator si : othersMap.values()) {
+                        if (si.status.equals("Planned Works")) plannedWorks.add(si);
+                        else othersLive.add(si);
+                    }
+
+                    Collections.sort(trackedLive, (a, b) -> a.tocName.compareToIgnoreCase(b.tocName));
+                    Collections.sort(othersLive, (a, b) -> a.tocName.compareToIgnoreCase(b.tocName));
+                    Collections.sort(plannedWorks, (a, b) -> a.tocName.compareToIgnoreCase(b.tocName));
+
+                    List<DisruptionResponce.ServiceIndicator> finalData = new ArrayList<>(trackedLive);
+
+                    if (!trackedLive.isEmpty() && !othersLive.isEmpty()) {
+                        DisruptionResponce.ServiceIndicator sep = new DisruptionResponce.ServiceIndicator();
+                        sep.tocCode = "SEPARATOR";
+                        sep.tocName = "OTHER OPERATORS";
+                        finalData.add(sep);
+                    }
+                    finalData.addAll(othersLive);
+
+                    if (!plannedWorks.isEmpty()) {
+                        DisruptionResponce.ServiceIndicator sep = new DisruptionResponce.ServiceIndicator();
+                        sep.tocCode = "SEPARATOR";
+                        sep.tocName = "ENGINEERING WORKS";
+                        finalData.add(sep);
+                        finalData.addAll(plannedWorks);
+                    }
 
                     adapter.updateData(finalData);
 
                     TextView goodServiceSubtext = findViewById(R.id.goodServiceSubtext);
-                    goodServiceSubtext.setText(trackedList.isEmpty() ? "On all lines" : "All other lines");
+                    goodServiceSubtext.setText(trackedLive.isEmpty() ? "On all lines" : "All other lines");
                     liveIndicator.setText("◉ Live");
-                    String widgetJson = new Gson().toJson(new ArrayList<>(trackedList));
+
+                    String widgetJson = new Gson().toJson(new ArrayList<>(trackedLive));
                     String appJson = new Gson().toJson(finalData);
 
                     prefs.edit()

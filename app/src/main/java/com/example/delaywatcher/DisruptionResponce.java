@@ -1,7 +1,6 @@
 package com.example.delaywatcher;
 
 import com.google.gson.annotations.SerializedName;
-
 import java.util.List;
 
 public class DisruptionResponce {
@@ -9,7 +8,9 @@ public class DisruptionResponce {
     public List<ServiceIndicator> serviceIndicators;
 
     public static class ServiceIndicator {
-        public String description;
+        public String description = "";
+        public String plannedDescription = "";
+
         @SerializedName("tocCode")
         public String tocCode;
 

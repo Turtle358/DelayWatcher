@@ -57,13 +57,14 @@
                 android:layout_marginBottom="32dp"/>
 
             <TextView
+                android:id="@+id/headerActive"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Active Incidents"
                 android:textColor="#000000"
                 android:textSize="20sp"
                 android:textStyle="bold"
-                android:layout_marginBottom="16dp"/>
+                android:layout_marginBottom="12dp"/>
 
             <TextView
                 android:id="@+id/detailIncidentsText"
@@ -72,6 +73,26 @@
                 android:text="Detailed incident reports will appear here..."
                 android:textColor="#111111"
                 android:textSize="16sp"
+                android:lineSpacingExtra="4dp"/>
+
+            <TextView
+                android:id="@+id/headerPlanned"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Planned Engineering Works"
+                android:textColor="#000000"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:layout_marginTop="24dp"
+                android:layout_marginBottom="12dp"/>
+
+            <TextView
+                android:id="@+id/detailPlannedText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Engineering work details will appear here..."
+                android:textColor="#666666"
+                android:textSize="15sp"
                 android:lineSpacingExtra="4dp"/>
 
         </LinearLayout>
