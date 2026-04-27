@@ -35,15 +35,34 @@
             android:textSize="20sp" />
     </LinearLayout>
 
-    <ImageView
-        android:id="@+id/widgetRefresh"
+    <FrameLayout
         android:layout_width="28dp"
         android:layout_height="28dp"
         android:layout_alignParentEnd="true"
-        android:layout_alignParentTop="true"
-        android:contentDescription="Refresh"
-        android:src="@android:drawable/ic_popup_sync"
-        android:tint="#111111" />
+        android:layout_alignParentTop="true">
+
+        <ImageView
+            android:id="@+id/widgetRefresh"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:contentDescription="Refresh"
+            android:src="@android:drawable/ic_popup_sync"
+            android:tint="#111111" />
+
+        <ProgressBar
+            android:id="@+id/widgetProgressDark"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone"
+            android:indeterminateTint="#111111" />
+
+        <ProgressBar
+            android:id="@+id/widgetProgressLight"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone"
+            android:indeterminateTint="#FFFFFF" />
+    </FrameLayout>
 
     <LinearLayout
         android:layout_width="match_parent"

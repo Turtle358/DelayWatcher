@@ -69,6 +69,9 @@ public class AppWidgetProvider extends android.appwidget.AppWidgetProvider {
         Intent refreshIntent = new Intent(context, AppWidgetProvider.class);
         refreshIntent.setAction("com.example.delaywatcher.ACTION_REFRESH_WIDGET");
 
+        // Pass the current state to the Intent so the receiver knows which spinner to show
+        refreshIntent.putExtra("IS_GOOD_SERVICE", data.isEmpty());
+
         PendingIntent piRefresh = PendingIntent.getBroadcast(
                 context,
                 1,
@@ -81,6 +84,10 @@ public class AppWidgetProvider extends android.appwidget.AppWidgetProvider {
     }
 
     private void renderWidgetVisuals(RemoteViews views, List<DisruptionResponce.ServiceIndicator> disruptedTocs) {
+        views.setViewVisibility(R.id.widgetRefresh, View.VISIBLE);
+        views.setViewVisibility(R.id.widgetProgressDark, View.GONE);
+        views.setViewVisibility(R.id.widgetProgressLight, View.GONE);
+
         if (disruptedTocs.isEmpty()) {
             views.setInt(R.id.widgetRoot, "setBackgroundResource", R.drawable.bg_widget_blue);
             views.setTextViewText(R.id.titleLine1, "Good service");
@@ -147,6 +154,17 @@ public class AppWidgetProvider extends android.appwidget.AppWidgetProvider {
         super.onReceive(context, intent);
 
         if ("com.example.delaywatcher.ACTION_REFRESH_WIDGET".equals(intent.getAction())) {
+            boolean isGoodService = intent.getBooleanExtra("IS_GOOD_SERVICE", false);
+            AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
+            ComponentName thisWidget = new ComponentName(context, AppWidgetProvider.class);
+            RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.widget_disruption);
+            views.setViewVisibility(R.id.widgetRefresh, View.GONE);
+            if (isGoodService) {
+                views.setViewVisibility(R.id.widgetProgressLight, View.VISIBLE);
+            } else {
+                views.setViewVisibility(R.id.widgetProgressDark, View.VISIBLE);
+            }
+            appWidgetManager.updateAppWidget(thisWidget, views);
             final PendingResult pendingResult = goAsync();
             new Thread(() -> {
                 performBackgroundSync(context);
