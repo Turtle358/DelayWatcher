@@ -84,7 +84,7 @@ public class AppWidgetProvider extends android.appwidget.AppWidgetProvider {
         if (disruptedTocs.isEmpty()) {
             views.setInt(R.id.widgetRoot, "setBackgroundResource", R.drawable.bg_widget_blue);
             views.setTextViewText(R.id.titleLine1, "Good service");
-            views.setTextViewText(R.id.titleLine2, "on all lines");
+            views.setTextViewText(R.id.titleLine2, "on selected lines");
             views.setTextColor(R.id.titleLine1, Color.WHITE);
             views.setTextColor(R.id.titleLine2, Color.WHITE);
             views.setTextColor(R.id.widgetTime, Color.WHITE);

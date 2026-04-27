@@ -16,7 +16,7 @@ public class SettingsActivity extends AppCompatActivity {
             "Avanti West Coast", "c2c", "Caledonian Sleeper", "Chiltern Railways",
             "CrossCountry", "East Midlands Railway", "Elizabeth Line", "Gatwick Express",
             "Grand Central", "Grand Central - North West", "Great Northern", "Greater Anglia", "Heathrow Express",
-            "Hull Trains", "LNER", "London Northwestern Railway", "London Overground",
+            "Hull Trains", "Island Line - SWR", "LNER", "London Northwestern Railway", "London Overground",
             "London Underground", "Lumo", "Merseyrail", "Northern", "ScotRail",
             "South Western Railway", "Southeastern", "Southern", "Stansted Express",
             "Thameslink", "TransPennine Express", "Transport for Wales"
@@ -26,7 +26,7 @@ public class SettingsActivity extends AppCompatActivity {
             "VT", "CC", "CS", "CH",
             "XC", "EM", "XR", "GX",
             "GC", "LF", "GN", "LE", "HX",
-            "HT", "GR", "LN", "LO",
+            "HT", "IS", "GR", "LN", "LO",
             "ZN", "LD", "ME", "NT", "SR",
             "SW", "SE", "SN", "SX",
             "TL", "TP", "AW"
