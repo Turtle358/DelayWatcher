@@ -7,12 +7,14 @@ import android.text.method.LinkMovementMethod;
 import android.view.View;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.view.WindowCompat;
 
 public class TOCDetailActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView()).setAppearanceLightStatusBars(false);
         setContentView(R.layout.activity_toc_detail);
         String tocName = getIntent().getStringExtra("TOC_NAME");
         String tocCode = getIntent().getStringExtra("TOC_CODE");
