@@ -34,3 +34,6 @@ To use this app, you need a free API token from National Rail:
 
 ## Acknowledgements
 Data provided by the [National Rail Open Data API](https://opendata.nationalrail.co.uk/).
+
+## Credits
+Assets: The app icon was generated using AI.
