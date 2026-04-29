@@ -44,6 +44,7 @@ public class TOCBrandHelper {
         officialColours.put("Hull Trains", "#DE005C");
         officialColours.put("London Northwestern Railway", "#00A91C");
         officialColours.put("Island Line - SWR", "#243D8F");
+        officialColours.put("West Midlands Railway", "#ff8200");
     }
 
     public static void init(Context context) {
@@ -104,6 +105,7 @@ public class TOCBrandHelper {
             case "HT": return "Hull Trains";
             case "LN": return "London Northwestern Railway";
             case "IL": return "Island Line - SWR";
+            case "WM": return "West Midlands Railway";
             default:
                 return code;
         }

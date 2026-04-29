@@ -20,7 +20,7 @@ public class SettingsActivity extends AppCompatActivity {
             "Hull Trains", "Island Line - SWR", "LNER", "London Northwestern Railway", "London Overground",
             "London Underground", "Lumo", "Merseyrail", "Northern", "ScotRail",
             "South Western Railway", "Southeastern", "Southern", "Stansted Express",
-            "Thameslink", "TransPennine Express", "Transport for Wales"
+            "Thameslink", "TransPennine Express", "Transport for Wales", "West Midlands Railway"
     };
 
     private final String[] tocCodes = {
@@ -30,7 +30,7 @@ public class SettingsActivity extends AppCompatActivity {
             "HT", "IS", "GR", "LN", "LO",
             "ZN", "LD", "ME", "NT", "SR",
             "SW", "SE", "SN", "SX",
-            "TL", "TP", "AW"
+            "TL", "TP", "AW", "WM"
     };
     private boolean[] checkedItems;
     private EditText etCustomerKey;
