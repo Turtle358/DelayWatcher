@@ -28,6 +28,7 @@ public class AppWidgetProvider extends android.appwidget.AppWidgetProvider {
 
     @Override
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
+        TOCBrandHelper.init(context);
         SharedPreferences prefs = context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
         String selectedTocs = prefs.getString("WIDGET_TRACKED_TOCS", "");
         List<String> tocFilter = new ArrayList<>();
@@ -68,8 +69,6 @@ public class AppWidgetProvider extends android.appwidget.AppWidgetProvider {
 
         Intent refreshIntent = new Intent(context, AppWidgetProvider.class);
         refreshIntent.setAction("com.example.delaywatcher.ACTION_REFRESH_WIDGET");
-
-        // Pass the current state to the Intent so the receiver knows which spinner to show
         refreshIntent.putExtra("IS_GOOD_SERVICE", data.isEmpty());
 
         PendingIntent piRefresh = PendingIntent.getBroadcast(
@@ -154,6 +153,7 @@ public class AppWidgetProvider extends android.appwidget.AppWidgetProvider {
         super.onReceive(context, intent);
 
         if ("com.example.delaywatcher.ACTION_REFRESH_WIDGET".equals(intent.getAction())) {
+            TOCBrandHelper.init(context);
             boolean isGoodService = intent.getBooleanExtra("IS_GOOD_SERVICE", false);
             AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
             ComponentName thisWidget = new ComponentName(context, AppWidgetProvider.class);
@@ -177,6 +177,7 @@ public class AppWidgetProvider extends android.appwidget.AppWidgetProvider {
         SharedPreferences prefs = context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE);
         String key = prefs.getString("CUSTOMER_KEY", "");
         if (key.isEmpty()) return;
+        TOCBrandHelper.init(context);
         String selectedTocs = prefs.getString("WIDGET_TRACKED_TOCS", "");
         Set<String> trackedSet = new HashSet<>();
         if (!selectedTocs.trim().isEmpty()) {
@@ -198,7 +199,6 @@ public class AppWidgetProvider extends android.appwidget.AppWidgetProvider {
                 Map<String, DisruptionResponce.ServiceIndicator> othersMap = new LinkedHashMap<>();
                 for (IncidentResponse incident : response.body()) {
                     if (incident.affectedOperators == null || "Cleared".equalsIgnoreCase(incident.status)) continue;
-
                     for (IncidentResponse.AffectedOperator op : incident.affectedOperators) {
                         String currentSummary = incident.summary != null ? incident.summary.toLowerCase() : "";
                         String currentDesc = incident.description != null ? incident.description.toLowerCase() : "";
@@ -214,9 +214,12 @@ public class AppWidgetProvider extends android.appwidget.AppWidgetProvider {
                         } else if (currentSummary.contains("bus") || currentSummary.contains("amended")) {
                             simplifiedStatus = "Planned Works";
                         }
-
-                        Map<String, DisruptionResponce.ServiceIndicator> targetMap =
-                                trackedSet.contains(op.tocCode) ? trackedMap : othersMap;
+                        Map<String, DisruptionResponce.ServiceIndicator> targetMap;
+                        if (trackedSet.isEmpty() || trackedSet.contains(op.tocCode)) {
+                            targetMap = trackedMap;
+                        } else {
+                            targetMap = othersMap;
+                        }
 
                         if (!targetMap.containsKey(op.tocCode)) {
                             DisruptionResponce.ServiceIndicator si = new DisruptionResponce.ServiceIndicator();
@@ -236,19 +239,43 @@ public class AppWidgetProvider extends android.appwidget.AppWidgetProvider {
                         }
                     }
                 }
-
                 List<DisruptionResponce.ServiceIndicator> trackedLive = new ArrayList<>();
+                List<DisruptionResponce.ServiceIndicator> othersLive = new ArrayList<>();
+                List<DisruptionResponce.ServiceIndicator> plannedWorks = new ArrayList<>();
                 for (DisruptionResponce.ServiceIndicator si : trackedMap.values()) {
-                    if (!si.status.equals("Planned Works")) trackedLive.add(si);
+                    if (si.status.equals("Planned Works")) plannedWorks.add(si);
+                    else trackedLive.add(si);
+                }
+                for (DisruptionResponce.ServiceIndicator si : othersMap.values()) {
+                    if (si.status.equals("Planned Works")) plannedWorks.add(si);
+                    else othersLive.add(si);
                 }
                 Collections.sort(trackedLive, (a, b) -> a.tocName.compareToIgnoreCase(b.tocName));
-
+                Collections.sort(othersLive, (a, b) -> a.tocName.compareToIgnoreCase(b.tocName));
+                Collections.sort(plannedWorks, (a, b) -> a.tocName.compareToIgnoreCase(b.tocName));
+                List<DisruptionResponce.ServiceIndicator> fullAppData = new ArrayList<>(trackedLive);
+                if (!trackedLive.isEmpty() && !othersLive.isEmpty()) {
+                    DisruptionResponce.ServiceIndicator sep = new DisruptionResponce.ServiceIndicator();
+                    sep.tocCode = "SEPARATOR";
+                    sep.tocName = "OTHER OPERATORS";
+                    fullAppData.add(sep);
+                }
+                fullAppData.addAll(othersLive);
+                if (!plannedWorks.isEmpty()) {
+                    DisruptionResponce.ServiceIndicator sep = new DisruptionResponce.ServiceIndicator();
+                    sep.tocCode = "SEPARATOR";
+                    sep.tocName = "ENGINEERING WORKS";
+                    fullAppData.add(sep);
+                    fullAppData.addAll(plannedWorks);
+                }
                 String widgetJson = new com.google.gson.Gson().toJson(trackedLive);
+                String appJson = new com.google.gson.Gson().toJson(fullAppData);
+
                 prefs.edit()
                         .putString("CACHED_TOC_DATA", widgetJson)
+                        .putString("CACHED_TOC_DATA_ALL", appJson)
                         .putLong("LAST_SYNC_TIME", System.currentTimeMillis())
                         .apply();
-
                 AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
                 ComponentName thisWidget = new ComponentName(context, AppWidgetProvider.class);
                 int[] appWidgetIds = appWidgetManager.getAppWidgetIds(thisWidget);
