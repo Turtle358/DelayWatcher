@@ -1,5 +1,8 @@
 package com.example.delaywatcher;
 
+import android.appwidget.AppWidgetManager;
+import android.content.ComponentName;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.widget.Button;
@@ -11,28 +14,13 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.view.WindowCompat;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class SettingsActivity extends AppCompatActivity {
-    private final String[] tocNames = {
-            "Avanti West Coast", "c2c", "Caledonian Sleeper", "Chiltern Railways",
-            "CrossCountry", "East Midlands Railway", "Elizabeth Line", "Gatwick Express",
-            "Grand Central", "Grand Central - North West", "Great Northern", "Greater Anglia", "Heathrow Express",
-            "Hull Trains", "Island Line - SWR", "LNER", "London Northwestern Railway", "London Overground",
-            "London Underground", "Lumo", "Merseyrail", "Northern", "ScotRail",
-            "South Western Railway", "Southeastern", "Southern", "Stansted Express",
-            "Thameslink", "TransPennine Express", "Transport for Wales", "West Midlands Railway"
-    };
-
-    private final String[] tocCodes = {
-            "VT", "CC", "CS", "CH",
-            "XC", "EM", "XR", "GX",
-            "GC", "LF", "GN", "LE", "HX",
-            "HT", "IS", "GR", "LN", "LO",
-            "ZN", "LD", "ME", "NT", "SR",
-            "SW", "SE", "SN", "SX",
-            "TL", "TP", "AW", "WM"
-    };
+    private String[] tocNames;
+    private String[] tocCodes;
     private boolean[] checkedItems;
+
     private EditText etCustomerKey;
     private Button btnSaveSettings;
     private Button btnSelectTocs;
@@ -42,21 +30,28 @@ public class SettingsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView()).setAppearanceLightStatusBars(true);
         setContentView(R.layout.activity_settings);
+        TOCBrandHelper.init(this);
+        List<Toc> tocList = TOCBrandHelper.getAllTocs();
+        tocNames = new String[tocList.size()];
+        tocCodes = new String[tocList.size()];
+        checkedItems = new boolean[tocList.size()];
+
+        SharedPreferences prefs = getSharedPreferences("MyPrefs", MODE_PRIVATE);
+        String savedTocs = prefs.getString("WIDGET_TRACKED_TOCS", "");
+
+        for (int i = 0; i < tocList.size(); i++) {
+            tocNames[i] = tocList.get(i).name;
+            tocCodes[i] = tocList.get(i).code;
+            if (savedTocs.contains(tocCodes[i])) {
+                checkedItems[i] = true;
+            }
+        }
 
         etCustomerKey = findViewById(R.id.etCustomerKey);
         btnSaveSettings = findViewById(R.id.btnSaveSettings);
         btnSelectTocs = findViewById(R.id.btnSelectTocs);
 
-        SharedPreferences prefs = getSharedPreferences("MyPrefs", MODE_PRIVATE);
-        String savedKey = prefs.getString("CUSTOMER_KEY", "");
-        etCustomerKey.setText(savedKey);
-        String savedTocs = prefs.getString("WIDGET_TRACKED_TOCS", "");
-        checkedItems = new boolean[tocCodes.length];
-        for (int i = 0; i < tocCodes.length; i++) {
-            if (savedTocs.contains(tocCodes[i])) {
-                checkedItems[i] = true;
-            }
-        }
+        etCustomerKey.setText(prefs.getString("CUSTOMER_KEY", ""));
 
         btnSelectTocs.setOnClickListener(v -> showTocDialog());
 
@@ -68,29 +63,38 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     private void showTocDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Select TOCs for Widget");
-        builder.setMultiChoiceItems(tocNames, checkedItems, (dialog, which, isChecked) -> {
-            checkedItems[which] = isChecked;
-        });
-        builder.setPositiveButton("Save", (dialog, which) -> {
-            ArrayList<String> toSave = new ArrayList<>();
-            for (int i = 0; i < tocCodes.length; i++) {
-                if (checkedItems[i]) toSave.add(tocCodes[i]);
-            }
-            String joined = String.join(",", toSave);
-            getSharedPreferences("MyPrefs", MODE_PRIVATE).edit().putString("WIDGET_TRACKED_TOCS", joined).apply();
-            android.appwidget.AppWidgetManager appWidgetManager = android.appwidget.AppWidgetManager.getInstance(this);
-            android.content.ComponentName thisWidget = new android.content.ComponentName(this, AppWidgetProvider.class);
-            int[] appWidgetIds = appWidgetManager.getAppWidgetIds(thisWidget);
+        new AlertDialog.Builder(this)
+                .setTitle("Select TOCs for Widget")
+                .setMultiChoiceItems(tocNames, checkedItems, (dialog, which, isChecked) -> {
+                    checkedItems[which] = isChecked;
+                })
+                .setPositiveButton("Save", (dialog, which) -> {
+                    ArrayList<String> toSave = new ArrayList<>();
+                    for (int i = 0; i < tocCodes.length; i++) {
+                        if (checkedItems[i]) toSave.add(tocCodes[i]);
+                    }
 
-            android.content.Intent intent = new android.content.Intent(this, AppWidgetProvider.class);
-            intent.setAction(android.appwidget.AppWidgetManager.ACTION_APPWIDGET_UPDATE);
-            intent.putExtra(android.appwidget.AppWidgetManager.EXTRA_APPWIDGET_IDS, appWidgetIds);
-            sendBroadcast(intent);
+                    String joined = String.join(",", toSave);
+                    getSharedPreferences("MyPrefs", MODE_PRIVATE)
+                            .edit()
+                            .putString("WIDGET_TRACKED_TOCS", joined)
+                            .apply();
 
-            Toast.makeText(this, "Widget Filter Updated", Toast.LENGTH_SHORT).show();
-        });
-        builder.show();
+                    refreshWidget();
+                    Toast.makeText(this, "Widget Filter Updated", Toast.LENGTH_SHORT).show();
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+    private void refreshWidget() {
+        AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(this);
+        ComponentName thisWidget = new ComponentName(this, AppWidgetProvider.class);
+        int[] appWidgetIds = appWidgetManager.getAppWidgetIds(thisWidget);
+
+        Intent intent = new Intent(this, AppWidgetProvider.class);
+        intent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
+        intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, appWidgetIds);
+        sendBroadcast(intent);
     }
 }
