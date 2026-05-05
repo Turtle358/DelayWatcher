@@ -208,11 +208,11 @@ public class AppWidgetProvider extends android.appwidget.AppWidgetProvider {
                                 && !currentSummary.contains("overrun") && !currentDesc.contains("overrun");
 
                         if (isEngineering) {
-                            simplifiedStatus = "Planned Works";
+                            simplifiedStatus = "Planned Engineering Works";
                         } else if (currentSummary.contains("major") || currentSummary.contains("suspended") || currentSummary.contains("closed") || currentSummary.contains("blocked")) {
                             simplifiedStatus = "Major Disruption";
                         } else if (currentSummary.contains("bus") || currentSummary.contains("amended")) {
-                            simplifiedStatus = "Planned Works";
+                            simplifiedStatus = "Planned Engineering Works";
                         }
                         Map<String, DisruptionResponce.ServiceIndicator> targetMap;
                         if (trackedSet.isEmpty() || trackedSet.contains(op.tocCode)) {
@@ -226,7 +226,7 @@ public class AppWidgetProvider extends android.appwidget.AppWidgetProvider {
                             si.tocCode = op.tocCode;
                             si.tocName = TOCBrandHelper.getNameForCode(op.tocCode);
                             si.status = simplifiedStatus;
-                            if (simplifiedStatus.equals("Planned Works")) {
+                            if (simplifiedStatus.equals("Planned Engineering Works")) {
                                 si.plannedDescription = incident.description;
                             } else {
                                 si.description = incident.description;
@@ -234,8 +234,24 @@ public class AppWidgetProvider extends android.appwidget.AppWidgetProvider {
                             targetMap.put(op.tocCode, si);
                         } else {
                             DisruptionResponce.ServiceIndicator existing = targetMap.get(op.tocCode);
-                            if (simplifiedStatus.equals("Major Disruption")) existing.status = "Major Disruption";
-                            else if (simplifiedStatus.equals("Minor Disruption") && existing.status.equals("Planned Works")) existing.status = "Minor Disruption";
+                            if (simplifiedStatus.equals("Major Disruption")) {
+                                existing.status = "Major Disruption";
+                            } else if (simplifiedStatus.equals("Minor Disruption") && existing.status.equals("Planned Engineering Works")) {
+                                existing.status = "Minor Disruption";
+                            }
+                            if (simplifiedStatus.equals("Planned Engineering Works")) {
+                                if (existing.plannedDescription.isEmpty()) {
+                                    existing.plannedDescription = incident.description;
+                                } else {
+                                    existing.plannedDescription += "<br><br><hr><br>" + incident.description;
+                                }
+                            } else {
+                                if (existing.description.isEmpty()) {
+                                    existing.description = incident.description;
+                                } else {
+                                    existing.description += "<br><br><hr><br>" + incident.description;
+                                }
+                            }
                         }
                     }
                 }
@@ -243,11 +259,11 @@ public class AppWidgetProvider extends android.appwidget.AppWidgetProvider {
                 List<DisruptionResponce.ServiceIndicator> othersLive = new ArrayList<>();
                 List<DisruptionResponce.ServiceIndicator> plannedWorks = new ArrayList<>();
                 for (DisruptionResponce.ServiceIndicator si : trackedMap.values()) {
-                    if (si.status.equals("Planned Works")) plannedWorks.add(si);
+                    if (si.status.equals("Planned Engineering Works")) plannedWorks.add(si);
                     else trackedLive.add(si);
                 }
                 for (DisruptionResponce.ServiceIndicator si : othersMap.values()) {
-                    if (si.status.equals("Planned Works")) plannedWorks.add(si);
+                    if (si.status.equals("Planned Engineering Works")) plannedWorks.add(si);
                     else othersLive.add(si);
                 }
                 Collections.sort(trackedLive, (a, b) -> a.tocName.compareToIgnoreCase(b.tocName));
